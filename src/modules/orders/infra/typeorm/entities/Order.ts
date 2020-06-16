@@ -11,7 +11,7 @@ import {
 import Customer from '@modules/customers/infra/typeorm/entities/Customer';
 import OrdersProducts from '@modules/orders/infra/typeorm/entities/OrdersProducts';
 
-@Entity()
+@Entity('orders')
 class Order {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -20,7 +20,10 @@ class Order {
   @JoinColumn({ name: 'customer_id' })
   customer: Customer;
 
-  @OneToMany(() => OrdersProducts, ordersProducts => ordersProducts.order)
+  @OneToMany(() => OrdersProducts, ordersProducts => ordersProducts.order, {
+    cascade: ['insert'],
+  })
+  @JoinColumn({ name: 'order_id' })
   order_products: OrdersProducts[];
 
   @CreateDateColumn()
