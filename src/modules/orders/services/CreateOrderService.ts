@@ -39,15 +39,25 @@ class CreateOrderService {
       throw new AppError('Customer does not exists.');
     }
 
-    const checkIfProductsExists = await this.productsRepository.findAllById(
-      products,
-    );
+    const recoverProducts = await this.productsRepository.findAllById(products);
 
-    if (checkIfProductsExists.length !== products.length) {
+    if (recoverProducts.length !== products.length) {
       throw new AppError('Invalid products.');
     }
 
-    const getProductsData = checkIfProductsExists.map(product => {
+    recoverProducts.map(product => {
+      const key = products.findIndex(
+        searchedProduct => searchedProduct.id === product.id,
+      );
+
+      if (product.quantity === 0 || products[key].quantity > product.quantity) {
+        throw new AppError('Product is unavailable.');
+      }
+
+      return product;
+    });
+
+    const getProductsData = recoverProducts.map(product => {
       const key = products.findIndex(
         searchedProduct => searchedProduct.id === product.id,
       );
@@ -63,6 +73,8 @@ class CreateOrderService {
       customer: getCustomerData,
       products: getProductsData,
     });
+
+    await this.productsRepository.updateQuantity(products);
 
     return order;
   }
